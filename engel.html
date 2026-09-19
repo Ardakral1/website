@@ -1,0 +1,18 @@
+<script>
+    // Sağ tık menüsünü engelleme
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+
+    // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U gibi tuş kombinasyonlarını engelleme
+    document.addEventListener('keydown', function(e) {
+        if (
+            e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) || 
+            (e.ctrlKey && (e.key === 'U' || e.key === 'u'))
+        ) {
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
