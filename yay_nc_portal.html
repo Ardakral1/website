@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kazee.35 | Streamer</title>
+
+    <script>
+        (function () {
+            try {
+                const saved = localStorage.getItem('site-theme');
+                const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const shouldDark = saved ? saved === 'dark' : systemDark;
+                document.documentElement.classList.toggle('dark', shouldDark);
+            } catch (e) {}
+        })();
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        /* Apple Sistem Fontları (San Francisco) */
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        apple: {
+                            light: '#f5f5f7',
+                            lightcard: '#ffffff',
+                            lighttext: '#1d1d1f',
+                            dark: '#000000',
+                            darkcard: '#1c1c1e',
+                            darktext: '#f5f5f7',
+                            blue: '#0071e3',
+                            bluehover: '#0077ED',
+                            gray: '#86868b'
+                        }
+                    },
+                    borderRadius: {
+                        'apple': '18px',
+                        'apple-lg': '24px'
+                    },
+                    boxShadow: {
+                        'apple': '0 4px 24px rgba(0, 0, 0, 0.04)',
+                        'apple-dark': '0 4px 24px rgba(0, 0, 0, 0.2)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.015em;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Apple Tarzı Kaydırma Çubuğu */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        .dark ::-webkit-scrollbar-track { background: #000000; }
+        .dark ::-webkit-scrollbar-thumb { background: #333336; border-radius: 10px; border: 2px solid #000000; }
+        
+        ::-webkit-scrollbar-track { background: #f5f5f7; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; border: 2px solid #f5f5f7; }
+
+        /* Modal Açılış Animasyonları */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .modal-exit {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .modal-exit-active {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-apple-light text-apple-lighttext dark:bg-apple-dark dark:text-apple-darktext">
+
+    <nav class="fixed w-full z-40 top-0 left-0 bg-white/70 dark:bg-black/70 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-14">
+                <!-- Logo -->
+                <div class="flex items-center gap-2 cursor-pointer">
+                    <span class="text-xl font-semibold tracking-tight text-apple-lighttext dark:text-apple-darktext">Kazee.35</span>
+                </div>
+
+                <!-- Menü & Tema Modu -->
+                <div class="hidden md:flex items-center space-x-8 text-sm font-medium">
+                    <a href="#yayin" class="text-apple-lighttext/80 hover:text-apple-lighttext dark:text-apple-darktext/80 dark:hover:text-apple-darktext transition-colors">Yayın</a>
+                    <a href="#destekciler" class="text-apple-lighttext/80 hover:text-apple-lighttext dark:text-apple-darktext/80 dark:hover:text-apple-darktext transition-colors">Destekçiler</a>
+                    <a href="#moderatorler" class="text-apple-lighttext/80 hover:text-apple-lighttext dark:text-apple-darktext/80 dark:hover:text-apple-darktext transition-colors">Moderatörler</a>
+                    
+                    <button onclick="toggleTheme()" class="text-apple-lighttext/80 hover:text-apple-lighttext dark:text-apple-darktext/80 dark:hover:text-apple-darktext transition-colors">
+                        <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Mobil Menü İkonu -->
+                <div class="md:hidden flex items-center gap-4">
+                    <button onclick="toggleTheme()">
+                        <i id="themeIconMobile" class="fa-solid fa-moon text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-24">
+        <!-- JS Error Overlay -->
+        <div id="jsErrorOverlay" class="fixed top-4 right-4 z-50 hidden max-w-sm"></div>
+        
+        <section id="yayin" class="mt-8">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-apple-lighttext dark:text-apple-darktext">Canlı Yayın</h1>
+                <p id="introStatusText" class="text-lg text-apple-gray font-medium">Canlı Yayın şu anda aktif değil. Lütfen saat 13.00-20.00 arasında gelin.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6 h-auto lg:h-[600px]">
+                <!-- Hediye Listesi (Solda) -->
+                <div id="giftList" class="w-full lg:w-1/6 bg-apple-lightcard dark:bg-apple-darkcard rounded-apple-lg shadow-apple dark:shadow-apple-dark flex flex-col transition-transform duration-300 hover:scale-[1.02]">
+                    <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <span class="font-semibold text-apple-lighttext dark:text-apple-darktext">Son Hediyeler</span>
+                            <span class="text-xs text-apple-gray">Canlı</span>
+                        </div>
+                        <i class="fa-solid fa-gift text-apple-gray text-sm"></i>
+                    </div>
+
+                    <div id="giftItems" class="p-3 flex-1 overflow-y-auto space-y-3 text-sm">
+                        <div class="text-center text-apple-gray">Canlı yayın akti̇f değil.</div>
+                    </div>
+                </div>
+
+                <!-- Video Player Alanı -->
+                <div id="videoCard" onclick="openModal('redirectModal')" class="w-full lg:w-2/3 bg-apple-lightcard dark:bg-apple-darkcard rounded-apple-lg shadow-apple dark:shadow-apple-dark overflow-hidden relative cursor-pointer group transition-transform duration-300 hover:scale-[1.01]">
+                    
+                    <!-- Canlı Rozeti -->
+                    <div id="liveBadge" class="absolute top-4 left-4 z-10 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
+                        <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div> CANLI
+                    </div>
+                    <div id="offlineBanner" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden">
+                        <div class="bg-black/70 text-white px-6 py-3 rounded-full text-sm font-semibold tracking-wide">YAYIN KAPALI</div>
+                    </div>
+
+                    <!-- Video Arkaplan / Kapak -->
+                    <img src="https://placehold.co/1280x720/1d1d1f/f5f5f7?text=Yayin+Onizlemesi" alt="Yayın" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300">
+                    
+                    <!-- Play Butonu Overlay -->
+                    <div id="videoOverlay" class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors duration-300">
+                        <div id="videoPlay" class="w-20 h-20 bg-white/20 dark:bg-black/40 backdrop-blur-xl rounded-full flex items-center justify-center text-white shadow-lg transform group-hover:scale-110 transition-all duration-300">
+                            <i class="fa-solid fa-play text-2xl ml-1"></i>
+                        </div>
+                        <div id="videoStatusText" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full hidden"></div>
+                    </div>
+                    <div id="videoViewerBadge" class="absolute top-4 right-4 z-10 bg-white/80 dark:bg-black/60 text-apple-lighttext dark:text-apple-darktext text-xs font-medium px-3 py-1 rounded-full hidden">
+                        <i class="fa-solid fa-eye mr-2"></i><span id="videoViewerCount">0</span>
+                    </div>
+                </div>
+
+                <!-- Sohbet Alanı -->
+                <div onclick="openModal('redirectModal')" class="w-full lg:w-1/6 bg-apple-lightcard dark:bg-apple-darkcard rounded-apple-lg shadow-apple dark:shadow-apple-dark flex flex-col cursor-pointer transition-transform duration-300 hover:scale-[1.02] relative group">
+                    
+                    <!-- Sadece estetik amaçlı overlay, tıklamayı modala yönlendirir -->
+                    <div class="absolute inset-0 z-10 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors duration-300 rounded-apple-lg"></div>
+
+                    <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <span class="font-semibold text-apple-lighttext dark:text-apple-darktext">Canlı Sohbet</span>
+                            <span id="viewerCount" class="text-xs text-apple-gray">0 izleyici</span>
+                        </div>
+                        <i class="fa-solid fa-users text-apple-gray text-sm"></i>
+                    </div>
+
+                    <div id="chatMessages" class="p-4 flex-1 overflow-y-auto space-y-3 text-sm relative">
+                        <div class="text-center text-apple-gray">Canlı yayın akti̇f değil.</div>
+                        <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-apple-lightcard dark:from-apple-darkcard to-transparent pointer-events-none"></div>
+                    </div>
+
+                    <div class="p-4 border-t border-gray-100 dark:border-gray-800">
+                        <div class="w-full bg-apple-light dark:bg-[#2c2c2e] rounded-full px-4 py-2.5 text-sm text-apple-gray flex items-center justify-between">
+                            <span>Sohbete katıl...</span>
+                            <i class="fa-solid fa-paper-plane text-apple-blue"></i>
+                        </div>
+                    </div>
+                </div>
+
+                
+            </div>
+        </section>
+
+        <section id="destekciler" class="pt-10">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight mb-2 text-apple-lighttext dark:text-apple-darktext">En Büyük Destekçiler</h2>
+                <p class="text-apple-gray">Topluluğumuza katkı sağlayan isimler.</p>
+            </div>
+
+            <div id="supportersGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="col-span-full text-center text-apple-gray">Yükleniyor...</div>
+            </div>
+        </section>
+
+        <section id="moderatorler" class="pt-10">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight mb-2 text-apple-lighttext dark:text-apple-darktext">Moderatörler</h2>
+                <p class="text-apple-gray">Kanalımızın düzenini sağlayan ekip.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-apple-lightcard dark:bg-apple-darkcard rounded-apple-lg p-5 flex items-center gap-4 shadow-apple dark:shadow-apple-dark">
+                    <img src="https://placehold.co/50x50/1d1d1f/f5f5f7?text=M" alt="Mod" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold text-apple-lighttext dark:text-apple-darktext">Mod_Ahmet</div>
+                        <div class="text-sm text-apple-gray">Baş Moderatör</div>
+                    </div>
+                </div>
+
+                <div class="bg-apple-lightcard dark:bg-apple-darkcard rounded-apple-lg p-5 flex items-center gap-4 shadow-apple dark:shadow-apple-dark">
+                    <img src="https://placehold.co/50x50/1d1d1f/f5f5f7?text=D" alt="Mod" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold text-apple-lighttext dark:text-apple-darktext">Discord_Krali</div>
+                        <div class="text-sm text-apple-gray">Admin</div>
+                    </div>
+                </div>
+
+                <div class="bg-apple-lightcard dark:bg-apple-darkcard rounded-apple-lg p-5 flex items-center gap-4 shadow-apple dark:shadow-apple-dark">
+                    <img src="https://placehold.co/50x50/1d1d1f/f5f5f7?text=C" alt="Mod" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold text-apple-lighttext dark:text-apple-darktext">Chat_Polisi</div>
+                        <div class="text-sm text-apple-gray">Denetim</div>
+                    </div>
+                </div>
+
+                <div class="bg-apple-lightcard dark:bg-apple-darkcard rounded-apple-lg p-5 flex items-center gap-4 shadow-apple dark:shadow-apple-dark">
+                    <img src="https://placehold.co/50x50/1d1d1f/f5f5f7?text=V" alt="Mod" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold text-apple-lighttext dark:text-apple-darktext">Vip_Edit</div>
+                        <div class="text-sm text-apple-gray">Editör</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-12 py-16 bg-apple-lightcard dark:bg-apple-darkcard border-t border-gray-200 dark:border-gray-800 text-center">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col items-center">
+            
+            <a href="https://tiktok.com/@kazee.35" target="_blank" rel="noopener noreferrer" class="w-14 h-14 bg-apple-light dark:bg-[#2c2c2e] rounded-full flex items-center justify-center text-apple-lighttext dark:text-apple-darktext hover:scale-105 transition-transform text-2xl mb-8">
+                <i class="fa-brands fa-tiktok"></i>
+            </a>
+
+            <div class="mb-12">
+                <button onclick="openModal('supportModal')" class="bg-apple-blue hover:bg-apple-bluehover text-white rounded-full px-8 py-3.5 font-medium transition-colors shadow-sm text-lg">
+                    Destek Talebi Aç
+                </button>
+            </div>
+
+            <p class="text-apple-gray text-sm">© 2026 Kazee.35. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <!-- CANLI YAYINA YÖNLENDİRME MODALI -->
+    <div id="redirectModal" class="fixed inset-0 z-50 hidden">
+        <!-- Overlay -->
+        <div id="redirectOverlay" class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('redirectModal')"></div>
+        
+        <!-- Modal Content -->
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div id="redirectContent" class="bg-white dark:bg-apple-darkcard w-full max-w-sm rounded-apple-lg shadow-2xl p-6 text-center pointer-events-auto transform scale-95 opacity-0 transition-all duration-300">
+                
+                <div class="w-16 h-16 bg-apple-light dark:bg-[#2c2c2e] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl text-apple-lighttext dark:text-apple-darktext">
+                    <i class="fa-brands fa-tiktok"></i>
+                </div>
+                
+                <h3 class="text-xl font-semibold mb-2 text-apple-lighttext dark:text-apple-darktext">Canlı Yayına Katıl</h3>
+                
+                <p class="text-apple-gray text-sm mb-6 leading-relaxed">
+                    Canlı yayına tam erişim sağlamak için lütfen tiktok.com/@kazee.35/live adresine gidiniz.
+                </p>
+
+                <div class="flex flex-col gap-3">
+                    <a href="https://www.tiktok.com/@kazee.35/live" target="_blank" rel="noopener noreferrer" onclick="closeModal('redirectModal')" class="w-full bg-apple-blue hover:bg-apple-bluehover text-white rounded-full py-3 font-medium transition-colors">
+                        Canlı Yayına Git
+                    </a>
+                    <button type="button" onclick="closeModal('redirectModal')" class="w-full bg-apple-light dark:bg-[#2c2c2e] hover:bg-gray-200 dark:hover:bg-[#3a3a3c] text-apple-lighttext dark:text-apple-darktext rounded-full py-3 font-medium transition-colors">
+                        İptal Et
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DESTEK TALEBİ MODALI -->
+    <div id="supportModal" class="fixed inset-0 z-50 hidden">
+        <!-- Overlay -->
+        <div id="supportOverlay" class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal('supportModal')"></div>
+        
+        <!-- Modal Content -->
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div id="supportContent" class="bg-white dark:bg-apple-darkcard w-full max-w-lg rounded-apple-lg shadow-2xl overflow-hidden pointer-events-auto transform scale-95 opacity-0 transition-all duration-300">
+                
+                <!-- Başlık -->
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white/50 dark:bg-black/20 backdrop-blur-md">
+                    <h3 class="text-lg font-semibold text-apple-lighttext dark:text-apple-darktext">Destek Talebi</h3>
+                    <button onclick="closeModal('supportModal')" class="w-8 h-8 bg-apple-light dark:bg-[#2c2c2e] rounded-full flex items-center justify-center text-apple-gray hover:text-apple-lighttext dark:hover:text-apple-darktext transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form class="p-6 space-y-4" onsubmit="submitForm(event)">
+                    <div>
+                        <label class="block text-sm font-medium mb-1.5 text-apple-lighttext dark:text-apple-darktext">Başlık</label>
+                        <input type="text" id="ticketTitle" required placeholder="Örn: VIP Üyelik Sorunu" class="w-full bg-apple-light dark:bg-[#2c2c2e] border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-apple-blue outline-none transition-all text-apple-lighttext dark:text-apple-darktext placeholder-gray-400 dark:placeholder-gray-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1.5 text-apple-lighttext dark:text-apple-darktext">E-Posta</label>
+                        <input type="email" id="ticketEmail" placeholder="gelişmelerden haberdar olmak için mail (isteğe bağlı)" class="w-full bg-apple-light dark:bg-[#2c2c2e] border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-apple-blue outline-none transition-all text-apple-lighttext dark:text-apple-darktext placeholder-gray-400 dark:placeholder-gray-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1.5 text-apple-lighttext dark:text-apple-darktext">Sorun</label>
+                        <textarea id="ticketIssue" required rows="4" placeholder="Detayları buraya yazınız..." class="w-full bg-apple-light dark:bg-[#2c2c2e] border-none rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-apple-blue outline-none transition-all resize-none text-apple-lighttext dark:text-apple-darktext placeholder-gray-400 dark:placeholder-gray-500"></textarea>
+                    </div>
+
+                    <div class="pt-4 flex gap-3">
+                        <button type="submit" class="flex-1 bg-apple-blue hover:bg-apple-bluehover text-white rounded-full py-3 font-medium transition-colors">
+                            Gönder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setTheme(isDark) {
+            const html = document.documentElement;
+            html.classList.toggle('dark', isDark);
+            try { localStorage.setItem('site-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+
+            const icon = document.getElementById('themeIcon');
+            const iconMobile = document.getElementById('themeIconMobile');
+            if (icon) icon.className = isDark ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
+            if (iconMobile) iconMobile.className = isDark ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
+        }
+
+        function toggleTheme() {
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const stored = (function () {
+                try { return localStorage.getItem('site-theme'); } catch (e) { return null; }
+            })();
+
+            if (stored === 'dark' || stored === 'light') {
+                const nextDark = stored === 'light';
+                setTheme(nextDark);
+                try { localStorage.removeItem('site-theme'); } catch (e) {}
+                return;
+            }
+
+            const isDark = !document.documentElement.classList.contains('dark');
+            setTheme(isDark);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stored = (function () {
+                try { return localStorage.getItem('site-theme'); } catch (e) { return null; }
+            })();
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (stored === 'dark' || stored === 'light') {
+                setTheme(stored === 'dark');
+            } else {
+                setTheme(systemDark);
+            }
+
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleSystemThemeChange = () => {
+                const hasManualOverride = (() => {
+                    try { return localStorage.getItem('site-theme') === 'dark' || localStorage.getItem('site-theme') === 'light'; } catch (e) { return false; }
+                })();
+                if (!hasManualOverride) {
+                    setTheme(mediaQuery.matches);
+                }
+            };
+
+            if (mediaQuery.addEventListener) {
+                mediaQuery.addEventListener('change', handleSystemThemeChange);
+            } else if (mediaQuery.addListener) {
+                mediaQuery.addListener(handleSystemThemeChange);
+            }
+        });
+
+        function showJSError(msg) {
+            try {
+                const overlay = document.getElementById('jsErrorOverlay');
+                if (!overlay) return;
+                overlay.innerHTML = '<div class="bg-red-600 text-white px-4 py-3 rounded shadow">JS Error: ' + escapeHtml(String(msg)) + '</div>';
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('hidden'), 8000);
+            } catch (e) {}
+        }
+
+        window.addEventListener('error', (ev) => {
+            showJSError(ev.message || ev.error || 'Unknown error');
+        });
+        window.addEventListener('unhandledrejection', (ev) => {
+            showJSError(ev.reason || 'Unhandled rejection');
+        });
+
+        function openModal(modalID) {
+            const modal = document.getElementById(modalID);
+            if (!modal) return;
+            const overlay = modal.querySelector('[id$="Overlay"]');
+            const content = modal.querySelector('[id$="Content"]');
+            modal.classList.remove('hidden');
+            if (overlay) overlay.classList.remove('opacity-0');
+            if (content) {
+                content.classList.remove('opacity-0', 'scale-95');
+                content.classList.add('opacity-100', 'scale-100');
+            }
+        }
+
+        function closeModal(modalID) {
+            const modal = document.getElementById(modalID);
+            if (!modal) return;
+            const overlay = modal.querySelector('[id$="Overlay"]');
+            const content = modal.querySelector('[id$="Content"]');
+            if (overlay) overlay.classList.add('opacity-0');
+            if (content) {
+                content.classList.remove('opacity-100', 'scale-100');
+                content.classList.add('opacity-0', 'scale-95');
+            }
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function submitForm(event) {
+            event.preventDefault();
+            const title = document.getElementById('ticketTitle')?.value?.trim() || '';
+            const email = document.getElementById('ticketEmail')?.value?.trim() || '';
+            const issue = document.getElementById('ticketIssue')?.value?.trim() || '';
+
+            if (!title || !issue) {
+                alert('Başlık ve sorun alanı zorunludur.');
+                return;
+            }
+
+            const form = event.target;
+            const originalHtml = form.innerHTML;
+            form.innerHTML = '<div class="text-center py-8"><div class="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-apple-blue border-t-transparent"></div><p class="text-sm text-apple-gray">Gönderiliyor...</p></div>';
+
+            fetch('/saveReport', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, email, issue })
+            }).catch(() => {}).finally(() => {
+                form.innerHTML = `
+                    <div class="text-center py-6">
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg shadow-green-500/30">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold mb-2 text-apple-lighttext dark:text-apple-darktext">Talebiniz Alındı</h4>
+                        <p class="text-sm text-apple-gray">En kısa sürede incelenecektir.</p>
+                    </div>
+                `;
+                setTimeout(() => {
+                    closeModal('supportModal');
+                    setTimeout(() => location.reload(), 300);
+                }, 2000);
+            });
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        let prevState = {
+            supportersKey: '',
+            msgsLen: 0,
+            lastMsgId: '',
+            viewerCount: -1,
+            isLive: null,
+            giftsKey: ''
+        };
+
+        function safeUrl(u, placeholder) {
+            if (!u || typeof u !== 'string') return placeholder;
+
+            try {
+                let s = String(u).trim().replace(/\\/g, '/');
+                if (!s) return placeholder;
+
+                if (/^https?:\/\//i.test(s)) {
+                    try {
+                        return decodeURIComponent(s);
+                    } catch (e) {
+                        try {
+                            return encodeURI(s);
+                        } catch (err) {
+                            return placeholder;
+                        }
+                    }
+                }
+
+                const sanitized = s.split(' ').map((part) => {
+                    try {
+                        return encodeURIComponent(part);
+                    } catch (e) {
+                        return '';
+                    }
+                }).join('%20');
+
+                return sanitized || placeholder;
+            } catch (e) {
+                return placeholder;
+            }
+        }
+
+        function makeSupportersKey(users) {
+            return users.slice(0, 6).map(u => `${u.username || u.nickname || u.id || ''}:${u.totalDiamonds || 0}`).join('|');
+        }
+
+        function renderSupporters(users) {
+            const grid = document.getElementById('supportersGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                const el = document.createElement('div');
+                el.className = 'col-span-full text-center text-apple-gray';
+                el.textContent = 'Henüz destekçi bulunamadı.';
+                grid.appendChild(el);
+                return;
+            }
+
+            users.slice(0, 6).forEach((u, i) => {
+                const rank = i + 1;
+                const name = u.nickname || u.username || 'Anon';
+                const total = u.totalDiamonds || 0;
+                const initial = String((u.nickname || u.username || 'A').charAt(0) || 'A').toUpperCase();
+                const avatarSrc = safeUrl(u.avatarLocal || u.avatarUrl, `https://placehold.co/100x100/1d1d1f/f5f5f7?text=${initial}`);
+
+                const card = document.createElement('div');
+                card.className = 'bg-apple-lightcard dark:bg-apple-darkcard rounded-apple-lg p-8 flex flex-col items-center text-center shadow-apple dark:shadow-apple-dark transform transition duration-300 hover:-translate-y-1';
+
+                const wrap = document.createElement('div');
+                wrap.className = 'w-24 h-24 mb-4 relative';
+
+                const bg = document.createElement('div');
+                bg.className = 'absolute inset-0 bg-gray-200 rounded-full blur-md opacity-30';
+
+                const img = document.createElement('img');
+                img.src = avatarSrc;
+                img.alt = name;
+                img.className = 'w-full h-full rounded-full object-cover relative z-10 border-2 border-gray-300';
+
+                wrap.appendChild(bg);
+                wrap.appendChild(img);
+
+                const h3 = document.createElement('h3');
+                h3.className = 'text-xl font-semibold mb-1';
+                h3.textContent = name;
+
+                const p = document.createElement('p');
+                p.className = 'text-apple-blue font-medium mb-4';
+                p.textContent = `${total} Elmas`;
+
+                const span = document.createElement('span');
+                span.className = 'text-xs font-medium bg-apple-light dark:bg-[#2c2c2e] text-apple-gray px-3 py-1 rounded-full';
+                span.textContent = `#${rank}. SIRADA`;
+
+                card.appendChild(wrap);
+                card.appendChild(h3);
+                card.appendChild(p);
+                card.appendChild(span);
+                grid.appendChild(card);
+            });
+        }
+
+        function renderChat(msgs) {
+            const chatContainer = document.getElementById('chatMessages');
+            if (!chatContainer) return;
+            if (!msgs || msgs.length === 0) {
+                chatContainer.innerHTML = '<div class="text-center text-apple-gray">Henüz mesaj yok.</div>';
+                return;
+            }
+
+            const toRender = msgs.slice().reverse();
+            chatContainer.innerHTML = toRender.map((m) => {
+                const time = new Date(m.timestamp).toLocaleTimeString('tr-TR');
+                const name = escapeHtml(m.nickname || 'Anon');
+                const text = escapeHtml(m.message || '');
+                return `<div class="flex flex-col"><div class="text-xs text-apple-gray">${time}</div><div><span class="font-semibold text-apple-lighttext dark:text-apple-darktext">${name}</span>: <span class="text-apple-lighttext dark:text-apple-darktext">${text}</span></div></div>`;
+            }).join('');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function renderGifts(giftLogs, usersObj) {
+            const container = document.getElementById('giftItems');
+            if (!container) return;
+            if (!giftLogs || giftLogs.length === 0) {
+                container.innerHTML = '<div class="text-center text-apple-gray">Henüz hediye yok.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            giftLogs.slice(0, 8).forEach((log) => {
+                let sender = 'Anonim';
+                let giftName = 'Hediye';
+
+                const senderMatch = log.match(/\] (.*?) \(@/);
+                if (senderMatch && senderMatch[1]) sender = senderMatch[1].trim();
+
+                const giftMatch = log.match(/-> (.*?) x/);
+                if (giftMatch && giftMatch[1]) giftName = giftMatch[1].trim();
+
+                const possible = Object.values(usersObj || {});
+                const found = possible.find(u => (u.nickname && log.indexOf(u.nickname) !== -1) || (u.username && log.indexOf('@' + u.username) !== -1));
+                const avatar = found ? (found.avatarLocal || found.avatarUrl) : null;
+                const avatarSrc = safeUrl(avatar, `https://placehold.co/48x48/1d1d1f/f5f5f7?text=${encodeURIComponent(sender.charAt(0).toUpperCase())}`);
+                const giftVisual = safeUrl(`https://placehold.co/40x40/0071e3/ffffff?text=${giftName.charAt(0).toUpperCase() || 'G'}`, 'https://placehold.co/40x40/0071e3/ffffff?text=G');
+
+                const item = document.createElement('div');
+                item.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/5';
+
+                const imgAvatar = document.createElement('img');
+                imgAvatar.src = avatarSrc;
+                imgAvatar.className = 'w-10 h-10 rounded-full object-cover border border-gray-200';
+                imgAvatar.alt = 'avatar';
+
+                const txt = document.createElement('div');
+                txt.className = 'flex-1 text-sm';
+                const nameEl = document.createElement('div');
+                nameEl.className = 'font-semibold text-apple-lighttext dark:text-apple-darktext';
+                nameEl.textContent = sender;
+                txt.appendChild(nameEl);
+
+                const imgGift = document.createElement('img');
+                imgGift.src = giftVisual;
+                imgGift.className = 'w-10 h-10 rounded-md object-cover';
+                imgGift.alt = 'gift';
+
+                item.appendChild(imgAvatar);
+                item.appendChild(txt);
+                item.appendChild(imgGift);
+                container.appendChild(item);
+            });
+        }
+
+        async function fetchAndRenderAll() {
+            const videoStatusText = document.getElementById('videoStatusText');
+            const videoPlay = document.getElementById('videoPlay');
+            const videoViewerBadge = document.getElementById('videoViewerBadge');
+            const videoViewerCount = document.getElementById('videoViewerCount');
+            const viewerCountNode = document.getElementById('viewerCount');
+
+            try {
+                const res = await fetch('yayin_data.json', { cache: 'no-store' });
+                if (!res.ok) throw new Error('Veri alınamadı');
+                const data = await res.json();
+
+                const usersObj = data.users || {};
+                const users = Object.values(usersObj).sort((a, b) => (b.totalDiamonds || 0) - (a.totalDiamonds || 0));
+                const key = makeSupportersKey(users);
+                if (key !== prevState.supportersKey) {
+                    renderSupporters(users);
+                    prevState.supportersKey = key;
+                }
+
+                const isLive = !!data.isLive;
+                const viewerCount = data.viewerCount || 0;
+                const newFollowers = data.currentStreamNewFollowers || 0;
+
+                const intro = document.getElementById('introStatusText');
+                const liveBadge = document.getElementById('liveBadge');
+                const offlineBanner = document.getElementById('offlineBanner');
+
+                if (isLive) {
+                    if (videoStatusText) videoStatusText.classList.add('hidden');
+                    if (videoPlay) videoPlay.classList.remove('hidden');
+                    if (videoViewerBadge) videoViewerBadge.classList.remove('hidden');
+                    if (liveBadge) liveBadge.classList.remove('hidden');
+                    if (offlineBanner) offlineBanner.classList.add('hidden');
+                    if (intro) intro.textContent = 'Kazee.35 şimdi canlı yayında. Katıl ve sohbete dahil ol.';
+                } else {
+                    if (videoStatusText) {
+                        videoStatusText.textContent = 'Canlı Yayın şu anda açık değil.';
+                        videoStatusText.classList.remove('hidden');
+                    }
+                    if (videoPlay) videoPlay.classList.add('hidden');
+                    if (videoViewerBadge) videoViewerBadge.classList.add('hidden');
+                    if (liveBadge) liveBadge.classList.add('hidden');
+                    if (offlineBanner) offlineBanner.classList.remove('hidden');
+                    if (intro) intro.textContent = 'Canlı Yayın şu anda aktif değil. Lütfen saat 13.00-20.00 arasında gelin.';
+                }
+                prevState.isLive = isLive;
+
+                if (viewerCount !== prevState.viewerCount) {
+                    if (videoViewerCount) videoViewerCount.textContent = viewerCount;
+                    if (viewerCountNode) viewerCountNode.textContent = `${viewerCount} izleyici · ${newFollowers} yeni takipçi`;
+                    prevState.viewerCount = viewerCount;
+                }
+
+                let msgs = [];
+                let giftLogs = [];
+                if (isLive) {
+                    msgs = Array.isArray(data.recentMessages) ? data.recentMessages.slice(0, 200) : [];
+                    giftLogs = Array.isArray(data.giftLogs) ? data.giftLogs : [];
+                }
+
+                const msgsLen = msgs.length;
+                const lastMsgId = msgs[0] ? (msgs[0].timestamp + '|' + (msgs[0].userId || msgs[0].nickname || '')) : '';
+                if (msgsLen !== prevState.msgsLen || lastMsgId !== prevState.lastMsgId || !isLive) {
+                    renderChat(msgs);
+                    prevState.msgsLen = msgsLen;
+                    prevState.lastMsgId = lastMsgId;
+                }
+
+                const giftsKey = isLive ? giftLogs.slice(0, 8).join('|') : '';
+                if (giftsKey !== prevState.giftsKey || !isLive) {
+                    renderGifts(isLive ? giftLogs : [], usersObj);
+                    prevState.giftsKey = giftsKey;
+                }
+            } catch (err) {
+                const grid = document.getElementById('supportersGrid');
+                if (grid) grid.innerHTML = '<div class="col-span-full text-center text-red-500">Veri yüklenirken hata: ' + escapeHtml(err.message) + '</div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndRenderAll();
+            setInterval(fetchAndRenderAll, 1000);
+        });
+    </script>
+</body>
+</html>
